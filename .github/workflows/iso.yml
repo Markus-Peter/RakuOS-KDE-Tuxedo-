@@ -13,6 +13,9 @@ jobs:
       - name: Create output directory
         run: mkdir -p output
 
+      - name: Pull custom container image
+        run: sudo podman pull ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
+
       - name: Run bootc-image-builder directly
         run: |
           sudo podman run --rm --privileged \
