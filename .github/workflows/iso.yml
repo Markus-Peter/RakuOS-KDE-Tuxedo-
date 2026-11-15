@@ -19,6 +19,19 @@ jobs:
       - name: Show repo config inside image (debug)
         run: sudo podman run --rm ghcr.io/markus-peter/rakuos-kde-tuxedo:latest ls -l /etc/yum.repos.d
 
+      - name: Inspect repos inside image (debug)
+        run: |
+          sudo podman run --rm ghcr.io/markus-peter/rakuos-kde-tuxedo:latest bash -c '
+            echo "=== /etc/yum.repos.d ==="; ls -l /etc/yum.repos.d;
+            echo "=== /usr/share/dnf5/repos.d ==="; ls -l /usr/share/dnf5/repos.d;
+            echo "=== command -v dnf ==="; which dnf; ls -l "$(which dnf)";
+            echo "=== dnf repolist ==="; dnf repolist 2>&1 | head -60;
+            echo "=== search grub2-tools ==="; dnf list available grub2-tools kernel anaconda 2>&1 | tail -20;
+            echo "=== rpm -qa count ==="; rpm -qa | wc -l;
+            echo "=== ostree admin status ==="; ostree admin status 2>&1 | head; cat /run/ostree-booted 2>/dev/null || echo "not ostree-booted";
+            echo "=== find .repo files ==="; find / -name "*.repo" -not -path "/proc/*" -not -path "/sys/*" 2>/dev/null;
+          '
+
       - name: Run bootc-image-builder
         run: |
           sudo podman run --rm --privileged --pull=newer \
