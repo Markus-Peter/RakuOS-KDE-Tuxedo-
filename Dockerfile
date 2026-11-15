@@ -13,9 +13,12 @@ RUN mkdir -p /etc/yum.repos.d && \
         printf '[fedora]\nname=Fedora $releasever - $basearch\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch\nenabled=1\nmetadata_expire=7d\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch\nskip_if_unavailable=False\n\n[fedora-updates]\nname=Fedora $releasever - $basearch - Updates\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch\nenabled=1\nmetadata_expire=6h\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch\nskip_if_unavailable=False\n' > /etc/yum.repos.d/fedora.repo; \
     fi
 
-# 1. Offizielles Tuxedo-Repository hinzufügen und Treiber + Control Center installieren
+# 1. Tuxedo-Repository hinzufügen, Key holen und Treiber installieren
 RUN dnf config-manager addrepo --from-repofile="https://rpm.tuxedocomputers.com/fedora/tuxedo.repo" && \
-    dnf install -y tuxedo-drivers tuxedo-control-center
+    mkdir -p /etc/pki/rpm-gpg && \
+    curl -fsSL https://rpm.tuxedocomputers.com/fedora/45/0x54840598.pub.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-tuxedo && \
+    dnf install -y tuxedo-drivers tuxedo-control-center && \
+    dnf clean all
 
 # 2. Virtualisierung (VMM / Virt-Manager / QEMU) und Nautilus installieren
 RUN dnf install -y \
