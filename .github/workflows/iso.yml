@@ -15,3 +15,5 @@ jobs:
         with:
           image: ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
           types: iso
+          distro: fedora
+          release: "45"
