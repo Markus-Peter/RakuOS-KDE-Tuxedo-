@@ -19,8 +19,7 @@ jobs:
           name=Fedora \$releasever - \$basearch
           metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-\$releasever&arch=\$basearch
           enabled=1
-          gpgcheck=1
-          repo_gpgcheck=0
+          gpgcheck=0
           type=rpm
           " > config/fedora.repo
 
@@ -32,7 +31,7 @@ jobs:
           sudo podman run --rm --privileged \
             --security-opt label=type:unconfined_t \
             --volume ./output:/output \
-            --volume ./config:/config:ro \
+            --volume ./config/fedora.repo:/etc/yum.repos.d/fedora.repo:ro \
             --volume /var/lib/containers/storage:/var/lib/containers/storage \
             quay.io/centos-bootc/bootc-image-builder:latest \
             build \
