@@ -7,15 +7,16 @@ FROM quay.io/rakuos/rakuos-kde:latest
 #    Deshalb alle vorhandenen Repo-Definitionen dorthin spiegeln.
 #    WICHTIG: KEINE erfundene fedora.repo anlegen – sie verweist auf tote file://-GPG-Pfade.
 RUN mkdir -p /etc/yum.repos.d && \
+    shopt -s nullglob && \
     for f in /usr/share/dnf5/repos.d/*.repo; do \
-        [ -e "$f" ] && ln -sf "$f" "/etc/yum.repos.d/$(basename "$f")"; \
+        ln -sf "$f" "/etc/yum.repos.d/$(basename "$f")"; \
     done
 
 # 0b. Alle vorhandenen GPG-Keys in die RPM-Datenbank importieren und
 #     toten file://-GPG-Referenzen aus den Repo-Dateien entfernen,
 #     damit rum nicht auf fehlende Dateien zugreift.
 RUN rpm --import /etc/pki/rpm-gpg/* || true && \
-    sed -ri '/^gpgkey=file:\/\//d' /etc/yum.repos.d/*.repo /usr/share/dnf5/repos.d/*.repo
+    find /etc/yum.repos.d /usr/share/dnf5/repos.d -name '*.repo' -exec sed -ri '/^gpgkey=file:\/\//d' {} + 2>/dev/null || true
 
 # 1. Tuxedo-Repository: Repo-Datei selbst schreiben (fest genaelter Key),
 #    Key via rpm --import vorladen, dann installieren.
