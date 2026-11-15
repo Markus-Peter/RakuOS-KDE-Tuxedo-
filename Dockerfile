@@ -1,5 +1,5 @@
 # 1. Basis-Image von RakuOS KDE verwenden
-FROM ghcr.io/rakuos/rakuos-kde:latest
+FROM ghcr.io/rakuos/rakuos:kde
 
 # 2. Tuxedo-Treiber und Control Center über das COPR-Repository installieren
 RUN dnf copr enable -y sspreitzer/tuxedo && \
