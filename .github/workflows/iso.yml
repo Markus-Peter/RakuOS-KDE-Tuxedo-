@@ -1,0 +1,24 @@
+name: Build ISO
+
+on:
+  workflow_dispatch: # Kann jederzeit manuell im Browser gestartet werden
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Build Bootc ISO
+        id: build-iso
+        uses: osbuild/bootc-image-builder-action@v3
+        with:
+          image: ghcr.io/${{ github.repository }}:latest
+          types: iso
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rakuos-tuxedo-iso
+          path: ${{ steps.build-iso.outputs.output-directory }}
