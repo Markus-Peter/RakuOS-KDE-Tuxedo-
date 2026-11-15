@@ -10,10 +10,22 @@ jobs:
       contents: read
       packages: read
     steps:
-      - name: Build Bootc ISO
-        uses: osbuild/image-builder-action@main
+      - name: Create output directory
+        run: mkdir -p output
+
+      - name: Run bootc-image-builder directly
+        run: |
+          sudo podman run --rm --privileged \
+            --security-opt label=type:unconfined_t \
+            --volume ./output:/output \
+            --volume /var/lib/containers/storage:/var/lib/containers/storage \
+            quay.io/centos-bootc/bootc-image-builder:latest \
+            build \
+            --type iso \
+            ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
+
+      - name: Upload ISO Artifact
+        uses: actions/upload-artifact@v4
         with:
-          image: ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
-          type: iso
-          distro: fedora
-          release: "45"
+          name: rakuos-tuxedo-iso
+          path: output/
