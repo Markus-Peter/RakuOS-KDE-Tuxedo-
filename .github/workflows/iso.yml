@@ -11,7 +11,18 @@ jobs:
       packages: read
     steps:
       - name: Create output directory
-        run: mkdir -p output
+        run: mkdir -p output config
+
+      - name: Create minimal repo config
+        run: |
+          echo "[fedora]
+          name=Fedora \$releasever - \$basearch
+          metalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-\$releasever&arch=\$basearch
+          enabled=1
+          gpgcheck=1
+          repo_gpgcheck=0
+          type=rpm
+          " > config/fedora.repo
 
       - name: Pull custom container image
         run: sudo podman pull ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
@@ -21,6 +32,7 @@ jobs:
           sudo podman run --rm --privileged \
             --security-opt label=type:unconfined_t \
             --volume ./output:/output \
+            --volume ./config:/config:ro \
             --volume /var/lib/containers/storage:/var/lib/containers/storage \
             quay.io/centos-bootc/bootc-image-builder:latest \
             build \
