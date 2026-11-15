@@ -14,6 +14,6 @@ jobs:
         uses: osbuild/image-builder-action@main
         with:
           image: ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
-          types: iso
+          type: iso
           distro: fedora
           release: "45"
