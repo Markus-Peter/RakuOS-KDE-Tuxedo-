@@ -26,6 +26,7 @@ jobs:
             build \
             --type iso \
             --rootfs btrfs \
+            --local \
             ghcr.io/markus-peter/rakuos-kde-tuxedo:latest
 
       - name: Upload ISO Artifact
