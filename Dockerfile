@@ -5,18 +5,22 @@ FROM quay.io/rakuos/rakuos-kde:latest
 #    Fedora 45 legt .repo-Dateien nur noch in /usr/share/dnf5/repos.d ab,
 #    der ISO-Depsolve im Builder liest aber ausschließlich /etc/yum.repos.d.
 #    Deshalb alle vorhandenen Repo-Definitionen dorthin spiegeln.
+#    WICHTIG: KEINE erfundene fedora.repo anlegen – sie verweist auf tote file://-GPG-Pfade.
 RUN mkdir -p /etc/yum.repos.d && \
     for f in /usr/share/dnf5/repos.d/*.repo; do \
         [ -e "$f" ] && ln -sf "$f" "/etc/yum.repos.d/$(basename "$f")"; \
-    done; \
-    if [ ! -f /etc/yum.repos.d/fedora.repo ]; then \
-        printf '[fedora]\nname=Fedora $releasever - $basearch\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=fedora-$releasever&arch=$basearch\nenabled=1\nmetadata_expire=7d\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch\nskip_if_unavailable=False\n\n[fedora-updates]\nname=Fedora $releasever - $basearch - Updates\nmetalink=https://mirrors.fedoraproject.org/metalink?repo=updates-released-f$releasever&arch=$basearch\nenabled=1\nmetadata_expire=6h\ngpgcheck=1\ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$releasever-$basearch\nskip_if_unavailable=False\n' > /etc/yum.repos.d/fedora.repo; \
-    fi
+    done
 
-# 1. Tuxedo-Repository hinzufügen, Key holen und Treiber installieren
-RUN dnf config-manager addrepo --from-repofile="https://rpm.tuxedocomputers.com/fedora/tuxedo.repo" && \
-    mkdir -p /etc/pki/rpm-gpg && \
-    curl -fsSL https://rpm.tuxedocomputers.com/fedora/45/0x54840598.pub.asc -o /etc/pki/rpm-gpg/RPM-GPG-KEY-tuxedo && \
+# 0b. Alle vorhandenen GPG-Keys in die RPM-Datenbank importieren und
+#     toten file://-GPG-Referenzen aus den Repo-Dateien entfernen,
+#     damit rum nicht auf fehlende Dateien zugreift.
+RUN rpm --import /etc/pki/rpm-gpg/* || true && \
+    sed -ri '/^gpgkey=file:\/\//d' /etc/yum.repos.d/*.repo /usr/share/dnf5/repos.d/*.repo
+
+# 1. Tuxedo-Repository: Repo-Datei selbst schreiben (fest genaelter Key),
+#    Key via rpm --import vorladen, dann installieren.
+RUN printf '[tuxedo]\nname=TUXEDO - Fedora $releasever - $basearch\nbaseurl=https://rpm.tuxedocomputers.com/fedora/$releasever/$basearch/base/\nenabled=1\ngpgcheck=1\ngpgkey=https://rpm.tuxedocomputers.com/fedora/$releasever/0x54840598.pub.asc\nskip_if_unavailable=False\n' > /etc/yum.repos.d/tuxedo.repo && \
+    rpm --import https://rpm.tuxedocomputers.com/fedora/$releasever/0x54840598.pub.asc && \
     dnf install -y tuxedo-drivers tuxedo-control-center && \
     dnf clean all
 
